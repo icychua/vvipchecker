@@ -3,83 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VVIP Correspondence Screener</title>
+    <title>VVIP Scanner</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
 <header>
-    <h1>Correspondence Priority Screener</h1>
+    <div class="header-inner">
+        <h1>VVIP Scanner</h1>
+        <a href="mailto:chua_cheng_yong_ian@mindef.gov.sg?subject=Feedback%20on%20VVIP%20checker%20tool" class="btn-header">Feedback</a>
+    </div>
 </header>
 
 <div class="main-container">
     <div class="card">
-        <div class="status-bar">
-            <span>Database Status: <strong id="dbStatus" style="color:var(--color-text-dark)">Loading...</strong></span>
-            <button class="btn-secondary" style="padding: 4px 10px; font-size: 10px; text-transform:none;" onclick="toggleUpload()">Update CSV</button>
+        <!-- Reminder Section -->
+        <div class="reminder-box">
+            <h3>REMINDER</h3>
+            <p>To ensure data security, <strong>do not</strong> paste email subjects or message content here. Only paste email addresses for verification.</p>
         </div>
 
-        <div id="uploadSection" class="hidden" style="margin-bottom: 2.5rem; padding: 1.5rem; border: 2px dashed #ccc; background: var(--color-iron-grey-100); border-radius: 4px;">
-            <label style="color:var(--color-text-dark); margin-top:0;">Temporary VVIP Database Update:</label>
-            <p style="font-size: 13px; color: #666; margin: 0 0 1rem 0;">Drag/drop a <code>.csv</code> or <code>.txt</code> file to update the database for this session. To make it permanent, update <code>vvips.csv</code> in the main repository.</p>
-            <input type="file" id="csvFileInput" accept=".csv,.txt" style="display: block; width: 100%;">
-        </div>
-
-        <label for="inputData">Paste Email Metadata or Content (Headers & Body):</label>
-        <textarea id="inputData" placeholder="Paste the entire email here, including 'To' and 'Cc' fields, or just the body text..."></textarea>
+        <label for="inputData">Paste email addresses here:</label>
+        <textarea id="inputData" placeholder="Paste 'To' or 'Cc' list... (Press Enter to check)"></textarea>
 
         <div class="button-group">
             <button id="checkBtn" class="btn-primary" onclick="runCheck()">Identify VVIPs</button>
             <button id="clearBtn" class="btn-secondary" onclick="resetForm()">Clear</button>
         </div>
 
-        <div id="resultArea" class="result-box">
+        <!-- Results appear here -->
+        <div id="resultArea" class="result-box"></div>
+
+        <!-- Database Controls moved to the bottom -->
+        <div class="status-bar">
+            <span>Database Status: <strong id="dbStatus">Initializing...</strong></span>
+            <div class="db-links">
+                <a href="https://github.com/icychua/vvipchecker/blob/main/vvips.csv" target="_blank" id="downloadLink">Download Database</a>
+                <button class="btn-secondary" style="padding: 2px 8px; font-size: 10px; text-transform:none; border-width: 1px;" onclick="toggleUpload()">Upload New CSV</button>
             </div>
+        </div>
+
+        <div id="uploadSection" class="hidden" style="margin-top: 1rem; padding: 1rem; border: 2px dashed #ccc; background: var(--color-iron-grey-100); border-radius: 4px;">
+            <label style="color:var(--color-text-dark); margin-top:0; font-size: 0.85rem;">Temporary Session Update:</label>
+            <input type="file" id="csvFileInput" accept=".csv,.txt" style="display: block; width: 100%; font-size: 0.8rem;">
+        </div>
     </div>
+
+
+    <!-- Added Footer -->
+    <footer class="app-footer">
+        <p align="right"><i>Developed by <strong>SDDD</strong> as part of the <strong>SD Productivity Tool Suite</strong></p></i>
+    </footer>
+
 </div>
 
 <script>
     let vvipDatabase = new Set();
-    let csvFileName = 'vvips.csv';
+    const LOG_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyqo08wpcqWfIebiCIUbEjdkalZrsaEVq58BM7p_qGEkqjwM9GlhIW4yH6HcuMEY921/exec'; // Add your Google App Script URL here
 
-    // 1. Initial Load: Fetch CSV from the relative path
     window.addEventListener('DOMContentLoaded', async () => {
         try {
-            const response = await fetch(csvFileName);
-            if (!response.ok) throw new Error('CSV not found');
+            const response = await fetch('vvips.csv');
+            if (!response.ok) throw new Error('Default CSV not found');
             const text = await response.text();
-            processCsv(text, `(${csvFileName})`);
+            processCsv(text, '(Default)');
         } catch (err) {
-            document.getElementById('dbStatus').textContent = `No remote database found. Please upload manually.`;
+            document.getElementById('dbStatus').textContent = `Database empty.`;
             document.getElementById('dbStatus').style.color = "var(--color-amber-orange-900)";
         }
     });
 
-    // 2. CSV Processing Logic
+    // Handle "Enter" to run check
+    document.getElementById('inputData').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault(); // Prevents new line
+            runCheck();
+        }
+    });
+
     function processCsv(text, source) {
-        // Handle common delimiters
-        const emails = text.split(/[\n,;]/)
-            .map(e => e.trim().toLowerCase())
-            .filter(e => e.includes('@'));
+        const emails = text.split(/[\n,;]/).map(e => e.trim().toLowerCase()).filter(e => e.includes('@'));
         vvipDatabase = new Set(emails);
-        
         const statusEl = document.getElementById('dbStatus');
         statusEl.textContent = `${vvipDatabase.size} VVIPs Loaded ${source}`;
-        statusEl.style.color = "#166534"; // Neutral success color
+        statusEl.style.color = "#166534";
     }
 
-    // 3. Handle Manual Session Upload
     document.getElementById('csvFileInput').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
         const reader = new FileReader();
         reader.onload = function(e) {
-            processCsv(e.target.result, `(Session Upload)`);
+            processCsv(e.target.result, `(Upload)`);
             toggleUpload();
-            // Optional: Auto-run check if data exists
-            if (document.getElementById('inputData').value.trim() !== '') {
-                runCheck();
-            }
         };
         reader.readAsText(file);
     });
@@ -88,43 +104,39 @@
         document.getElementById('uploadSection').classList.toggle('hidden');
     }
 
-    // 4. Core Screener Logic
-    function runCheck() {
+    async function runCheck() {
         const input = document.getElementById('inputData').value;
         const resultArea = document.getElementById('resultArea');
-        
-        if (vvipDatabase.size === 0) {
-            alert("VVIP Database is currently empty.");
-            return;
-        }
+        if (vvipDatabase.size === 0) return alert("Database is empty.");
+        if (!input.trim()) return alert("Please paste text first.");
 
-        if (input.trim() === '') {
-            alert("Please paste text to analyze.");
-            return;
-        }
-
-        // Regex to extract all email addresses from free text
         const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
         const found = input.match(emailRegex) || [];
         const uniqueFound = [...new Set(found.map(e => e.toLowerCase()))];
-        
         const matches = uniqueFound.filter(email => vvipDatabase.has(email));
 
         resultArea.style.display = 'block';
-        
         if (matches.length > 0) {
             resultArea.className = 'result-box result-match';
             resultArea.innerHTML = `
-                <h3>⚠️ ACTION REQUIRED: Please escalate to MFU</h3>
-                <p>The following protected email addresses were identified in the correspondence. Ensure special handling for this request.</p>
+                <h3>⚠️ ACTION REQUIRED: Escalate to MFU</h3>
+                <p>The following VVIPs were identified in your list:</p>
                 <div>${matches.map(m => `<span class="vvip-tag">${m}</span>`).join('')}</div>
-                <p style="font-size: 0.9rem; margin-top: 1.5rem; border-top: 1px dashed var(--color-amber-orange-700); padding-top: 1rem;"><strong>DLS Note:</strong> Ensure response headers are compliant and contrast is accurate before sending.</p>
             `;
-            logAction('VVIP_MATCH', matches.length);
         } else {
             resultArea.className = 'result-box result-clear';
-            resultArea.innerHTML = `<strong>Status:</strong> No VVIP email addresses detected.`;
-            logAction('CHECK_CLEAR', 0);
+            resultArea.innerHTML = `<strong>Status:</strong> No VVIPs detected.`;
+        }
+        
+        await sendPing();
+    }
+
+    async function sendPing() {
+        if (!LOG_SCRIPT_URL) return;
+        try {
+            await fetch(LOG_SCRIPT_URL, { method: 'POST', mode: 'no-cors' });
+        } catch (error) {
+            console.error("Logging error:", error);
         }
     }
 
@@ -132,15 +144,6 @@
         document.getElementById('inputData').value = '';
         document.getElementById('resultArea').style.display = 'none';
     }
-
-    // 5. Client-Side Privacy-Safe Logging (LocalStorage)
-    function logAction(type, count) {
-        const logs = JSON.parse(localStorage.getItem('vvip_checker_logs') || '[]');
-        logs.push({ t: new Date().toLocaleString(), action: type, count });
-        // Keep last 100 entries only
-        localStorage.setItem('vvip_checker_logs', JSON.stringify(logs.slice(-100)));
-    }
 </script>
-
 </body>
 </html>
