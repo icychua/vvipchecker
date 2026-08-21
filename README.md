@@ -9,3 +9,9 @@ A client-side web application designed to identify VVIP email addresses in free 
 
 ## Deployment
 Host these three files on a static platform like GitHub Pages.
+
+## Self-service database updates
+
+`main.py` is a Python Cloud Run function that receives authenticated FormSG CSV
+submissions and replaces `vvips.csv` in GitHub. See [DEPLOYMENT.md](DEPLOYMENT.md)
+for the FormSG, GitHub, Postman, and Google Cloud setup.

@@ -1,0 +1,50 @@
+# Cloud Build trigger configuration for the production FormSG CSV updater.
+# Configure the _POSTMAN_ADMIN_RECIPIENT substitution and secret names in the trigger.
+steps:
+  - name: gcr.io/k8s-skaffold/pack
+    id: Buildpack
+    entrypoint: pack
+    env:
+      - GOOGLE_ENTRYPOINT=$_ENTRYPOINT
+      - GOOGLE_FUNCTION_TARGET=$_FUNCTION_TARGET
+      - GOOGLE_PYTHON_VERSION=3.13.x
+    args:
+      - build
+      - $_AR_HOSTNAME/$PROJECT_ID/$_AR_REPOSITORY/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA
+      - --builder=gcr.io/buildpacks/builder:latest
+      - --network=cloudbuild
+      - --publish
+      - --path=.
+      - --env=GOOGLE_ENTRYPOINT
+      - --env=GOOGLE_FUNCTION_TARGET
+      - --env=GOOGLE_PYTHON_VERSION
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    id: Deploy
+    entrypoint: gcloud
+    args:
+      - run
+      - services
+      - update
+      - $_SERVICE_NAME
+      - --platform=managed
+      - --image=$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPOSITORY/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA
+      - --region=$_DEPLOY_REGION
+      - --set-env-vars=FORMSG_ENV=PRODUCTION,FORMSG_WEBHOOK_URI=https://vvipchecker-978932763347.europe-west1.run.app,CSV_FIELD_ID=6a86c71dec6219dca6650efa,SUBMITTER_EMAIL_FIELD_ID=6a87bf5a951f2495d647c377,GITHUB_OWNER=icychua,GITHUB_REPO=vvipchecker,GITHUB_BRANCH=main,GITHUB_FILE_PATH=vvips.csv,POSTMAN_ADMIN_RECIPIENT=$_POSTMAN_ADMIN_RECIPIENT,POSTMAN_BASE_URL=https://api.postman.gov.sg
+      - --set-secrets=FORM_SECRET_KEY=$_FORM_SECRET_KEY_SECRET:latest,GITHUB_TOKEN=$_GITHUB_TOKEN_SECRET:latest,POSTMAN_API_TOKEN=$_POSTMAN_API_TOKEN_SECRET:latest
+      - --quiet
+images:
+  - $_AR_HOSTNAME/$PROJECT_ID/$_AR_REPOSITORY/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA
+options:
+  substitutionOption: ALLOW_LOOSE
+  logging: CLOUD_LOGGING_ONLY
+substitutions:
+  _AR_HOSTNAME: europe-west1-docker.pkg.dev
+  _AR_REPOSITORY: cloud-run-source-deploy
+  _DEPLOY_REGION: europe-west1
+  _ENTRYPOINT: functions-framework
+  _FUNCTION_TARGET: formsg_webhook
+  _SERVICE_NAME: vvipchecker
+  _FORM_SECRET_KEY_SECRET: vvipchecker-prod-formsg-secret
+  _GITHUB_TOKEN_SECRET: github-vvipchecker-token
+  _POSTMAN_API_TOKEN_SECRET: postman-api-token
+  _POSTMAN_ADMIN_RECIPIENT: admin@example.gov.sg
