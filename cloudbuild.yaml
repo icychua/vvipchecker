@@ -18,6 +18,16 @@ steps:
       - --env=GOOGLE_ENTRYPOINT
       - --env=GOOGLE_FUNCTION_TARGET
       - --env=GOOGLE_PYTHON_VERSION
+  - name: gcr.io/cloud-builders/docker
+    id: Pull
+    args:
+      - pull
+      - $_AR_HOSTNAME/$PROJECT_ID/$_AR_REPOSITORY/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA
+  - name: gcr.io/cloud-builders/docker
+    id: Push
+    args:
+      - push
+      - $_AR_HOSTNAME/$PROJECT_ID/$_AR_REPOSITORY/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
     id: Deploy
     entrypoint: gcloud
