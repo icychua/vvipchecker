@@ -8,7 +8,7 @@ webhooks and updates `vvips.csv` on GitHub. Cloud Run builds `main.py` with
 
 The production deployment uses the following values:
 
-- FormSG webhook URI: `https://vvipchecker-978932763347.europe-west1.run.app`
+- FormSG webhook URI: `https://vvipchecker-978932763347.europe-west1.run.app/`
 - FormSG email field ID: `6a87bf5a951f2495d647c377`
 - FormSG CSV attachment field ID: `6a86c71dec6219dca6650efa`
 - GitHub target: `icychua/vvipchecker`, branch `main`, file `vvips.csv`
