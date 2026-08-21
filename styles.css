@@ -202,7 +202,6 @@ button {
 
 .db-links {
     display: flex;
-    gap: 15px;
     align-items: center;
 }
 
@@ -213,6 +212,24 @@ button {
 }
 
 .db-links a:hover {
+    text-decoration: underline;
+}
+
+.admin-update {
+    margin-top: 0.35rem;
+    text-align: right;
+}
+
+.admin-update a {
+    color: #666;
+    font-size: 0.7rem;
+    font-weight: 400;
+    font-style: italic;
+    text-decoration: none;
+}
+
+.admin-update a:hover {
+    color: var(--color-hub-blue-400);
     text-decoration: underline;
 }
 

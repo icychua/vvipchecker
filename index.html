@@ -39,13 +39,10 @@
             <span>Database Status: <strong id="dbStatus">Initializing...</strong></span>
             <div class="db-links">
                 <a href="/vvips.csv" target="_blank" id="downloadLink">Download Database</a>
-                <button class="btn-secondary" style="padding: 2px 8px; font-size: 10px; text-transform:none; border-width: 1px;" onclick="toggleUpload()">Upload New CSV</button>
             </div>
         </div>
-
-        <div id="uploadSection" class="hidden" style="margin-top: 1rem; padding: 1rem; border: 2px dashed #ccc; background: var(--color-iron-grey-100); border-radius: 4px;">
-            <label style="color:var(--color-text-dark); margin-top:0; font-size: 0.85rem;">Temporary Session Update:</label>
-            <input type="file" id="csvFileInput" accept=".csv,.txt" style="display: block; width: 100%; font-size: 0.8rem;">
+        <div class="admin-update">
+            <a href="https://form.gov.sg/6a88022e5953df9b5eea512b" target="_blank" rel="noopener noreferrer">Update VVIP database (admin only)</a>
         </div>
     </div>
 
@@ -87,21 +84,6 @@
         const statusEl = document.getElementById('dbStatus');
         statusEl.textContent = `${vvipDatabase.size} VVIPs Loaded ${source}`;
         statusEl.style.color = "#166534";
-    }
-
-    document.getElementById('csvFileInput').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            processCsv(e.target.result, `(Upload)`);
-            toggleUpload();
-        };
-        reader.readAsText(file);
-    });
-
-    function toggleUpload() {
-        document.getElementById('uploadSection').classList.toggle('hidden');
     }
 
     async function runCheck() {
